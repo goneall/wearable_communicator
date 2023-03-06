@@ -41,30 +41,37 @@ class WearableListener {
     _channel.setMethodCallHandler(_methodCallHandler);
   }
 
+  static void _callIfNotNull(MultiUseCallback? callback, dynamic args) {
+    if (callback != null) {
+      callback(args);
+    }
+  }
+
   static Future<void> _methodCallHandler(MethodCall call) async {
     switch (call.method) {
       case 'messageReceived':
-        if (call.arguments["args"] is String) {
+        if (call.arguments["args"] is String && call.arguments["id"] != null) {
           try {
             Map value = json.decode(call.arguments["args"]);
-            _messageCallbacksById[call.arguments["id"]](value);
+            _callIfNotNull(_messageCallbacksById[call.arguments["id"]], value);
           } catch (Exception) {
-            _messageCallbacksById[call.arguments["id"]](call.arguments["args"]);
+            _callIfNotNull(_messageCallbacksById[call.arguments["id"]],
+                call.arguments["args"]);
           }
         } else {
-          _messageCallbacksById[call.arguments["id"]](call.arguments["args"]);
+          _callIfNotNull(_messageCallbacksById[call.arguments["id"]],(call.arguments["args"]));
         }
         break;
       case 'dataReceived':
         if (call.arguments["args"] is String) {
           try {
             Map value = json.decode(call.arguments["args"]);
-            _dataCallbacksById[call.arguments["id"]](value);
+            _callIfNotNull(_dataCallbacksById[call.arguments["id"]],(value));
           } catch (Exception) {
-            _dataCallbacksById[call.arguments["id"]](call.arguments["args"]);
+            _callIfNotNull(_dataCallbacksById[call.arguments["id"]],(call.arguments["args"]));
           }
         } else {
-          _dataCallbacksById[call.arguments["id"]](call.arguments["args"]);
+          _callIfNotNull(_dataCallbacksById[call.arguments["id"]],(call.arguments["args"]));
         }
 
         break;
@@ -81,10 +88,8 @@ class WearableListener {
     int currentListenerId = _nextCallbackId++;
     _messageCallbacksById[currentListenerId] = callback;
     await _channel.invokeMethod("listenMessages", currentListenerId);
-    return () {
-      _channel.invokeMethod("cancelListeningMessages", currentListenerId);
-      _messageCallbacksById.remove(currentListenerId);
-    };
+    await _channel.invokeMethod("cancelListeningMessages", currentListenerId);
+    _messageCallbacksById.remove(currentListenerId);
   }
 
   /// register a function for data layer events
@@ -94,9 +99,7 @@ class WearableListener {
     int currentListenerId = _nextCallbackId++;
     _dataCallbacksById[currentListenerId] = callback;
     await _channel.invokeMethod("listenData", currentListenerId);
-    return () {
-      _channel.invokeMethod("cancelListeningData", currentListenerId);
-      _dataCallbacksById.remove(currentListenerId);
-    };
+    await _channel.invokeMethod("cancelListeningData", currentListenerId);
+    _dataCallbacksById.remove(currentListenerId);
   }
 }

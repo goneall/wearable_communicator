@@ -11,7 +11,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  TextEditingController _controller;
+  late TextEditingController _controller;
   String value = '';
 
   @override
@@ -56,14 +56,14 @@ class _MyAppState extends State<MyApp> {
               ElevatedButton(
                 child: Text('Send message to wearable'),
                 onPressed: () {
-                  primaryFocus.unfocus(disposition: UnfocusDisposition.scope);
+                  primaryFocus?.unfocus(disposition: UnfocusDisposition.scope);
                   WearableCommunicator.sendMessage({"text": value});
                 },
               ),
               ElevatedButton(
                 child: Text('set data on wearable'),
                 onPressed: () {
-                  primaryFocus.unfocus(disposition: UnfocusDisposition.scope);
+                  primaryFocus?.unfocus(disposition: UnfocusDisposition.scope);
                   WearableCommunicator.setData("message", {
                     "text": value != "" ? value : "test", // ensure we have at least empty string
                     "integerValue": 1,
